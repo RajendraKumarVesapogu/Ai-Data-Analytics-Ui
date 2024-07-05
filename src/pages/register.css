@@ -1,0 +1,29 @@
+.text-field-label {
+    display: block;
+    margin: 2rem;
+
+    font-weight: bold;
+}
+
+.text-field {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.register-root form {
+    text-align: left;
+    padding: 2em;
+    background-color: #4f4f4f;
+    border-radius: 2em;
+}
+
+.submit-btn {
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+
+.register-link {
+    text-align: center;
+}
