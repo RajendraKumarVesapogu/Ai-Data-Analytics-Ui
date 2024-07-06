@@ -10,11 +10,13 @@ const Query = () => {
   const [prompt, setPrompt] = useState('');
   const [results, setResults] = useState(null);
   const [customResults, setCustomResults] = useState(null);
-
+  const [token, setToken] = useState('');
   useEffect(() => {
     const fetchColumns = async () => {
       try {
         const response = localStorage.getItem("columns");
+        const t = localStorage.getItem("token");
+        setToken(t);
         setColumns(JSON.parse(response));
       } catch (error) {
         console.error('Error fetching columns:', error);
@@ -25,7 +27,7 @@ const Query = () => {
 
   const handleQuery = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/query/?field=${selectedField}&operator=${operator}&value=${value}`);
+      const response = await axios.get(`http://52.66.44.9/api/query/?field=${selectedField}&operator=${operator}&value=${value}`, { headers: { 'Content-Type': 'application/json', 'Authorization':'token '+token } });
       setResults(response.data);
       setCustomResults(null);
     } catch (error) {
@@ -35,8 +37,9 @@ const Query = () => {
 
   const handleCustomQuery = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/api/query/', { prompt });
+      const response = await axios.post('http://52.66.44.9/api/query/', { prompt },{ headers: { 'Content-Type': 'application/json', 'Authorization':'token '+token } });
       setCustomResults(response.data);
+      console.log(response.data);
       setResults(null);
     } catch (error) {
       console.error('Error performing custom query:', error);
@@ -45,7 +48,8 @@ const Query = () => {
 
   const renderAggregateResults = (data, title) => {
     if (!data) return null;
-
+    if (typeof data !== 'object') return null;
+  
     return (
       <div className="aggregate-results">
         <h3>{title}</h3>
@@ -53,7 +57,9 @@ const Query = () => {
           {Object.entries(data).map(([key, value]) => (
             <div key={key} className="circle">
               <div className="circle-content">
-                <div className="circle-value">{value}</div>
+                <div className="circle-value">
+                  {typeof value === 'number' ? value.toFixed(3) : value}
+                </div>
                 <div className="circle-label">{key}</div>
               </div>
             </div>
@@ -65,6 +71,7 @@ const Query = () => {
 
   const renderSearchResults = (data) => {
     if (!data || data.length === 0) return null;
+    if (typeof data !== 'object') return null;
 
     return (
       <div className="search-results">
@@ -121,6 +128,7 @@ const Query = () => {
         <button onClick={handleQuery}>Query</button>
       </div>
 
+        Use LLM to get the most relevant results for a custom prompt.
       <div className="custom-query">
         <input 
           type="text" 
@@ -128,7 +136,7 @@ const Query = () => {
           onChange={(e) => setPrompt(e.target.value)} 
           placeholder="Enter custom query prompt"
         />
-        <button onClick={handleCustomQuery}>Custom Query</button>
+        <button onClick={handleCustomQuery}>Send Prompt</button>
       </div>
 
       {results && (
