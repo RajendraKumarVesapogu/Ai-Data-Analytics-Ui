@@ -1,72 +1,78 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./login.css";
+import axios from "axios";
+import constants from "../constants";
+
 const Login = () => {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [response, setResponse] = useState(null);
+  const navigate = useNavigate();
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        console.log("called");
-        console.log(username, password);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    console.log("called");
+    console.log(email, password);
 
-        // fetch(" ", {
-        //     method: "POST",
-        //     headers: {
-        //         Accept: "application/json",
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         username: username,
-        //         password: password,
-        //     }),
-        // }).then((response) => {
-        //     localStorage.setItem("login-response", response);
-        //     if (true) {
-        //         // if (response.ok) {
-        //         navigate("/home");
-        //     }
-        // });
-        localStorage.setItem("token", "the valuble token");
-        navigate("/home");
-    };
+    await axios.post(
+        constants.backend_url + constants.login_path,
+        {
+          email,
+          password,
+        },
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        }
+      ).then((response) => {
+        if (response.data && response.data.token) {
+            localStorage.setItem("token", response.data.token);
+            navigate("/home");
+        }
+        setResponse(response);
+    });
+  };
 
-    return (
-        <div className="login-root">
-            <h3>Login</h3>
-            <form>
-                <label htmlFor="username" className="text-field-label">
-                    username
-                    <input
-                        className="text-field"
-                        type="text"
-                        name="username"
-                        id="username"
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </label>
-                <label htmlFor="password" className="text-field-label">
-                    password
-                    <input
-                        type="text"
-                        className="text-field"
-                        name="password"
-                        id="password"
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </label>
-                <div className="login-btn">
-                    <button className="login-btn" onClick={handleSubmit}>
-                        submit
-                    </button>
-                </div>
-                <div className="register-link">
-                    <Link to="/register">Register here</Link>
-                </div>
-            </form>
+  return (
+    <div className="login-root">
+      <h3>Login</h3>
+      <form onSubmit={handleSubmit}>
+        <label htmlFor="email" className="text-field-label">
+          email
+          <input
+            className="text-field"
+            type="text"
+            name="email"
+            id="email"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+        <label htmlFor="password" className="text-field-label">
+          password
+          <input
+            type="password" // Password field should be hidden
+            className="text-field"
+            name="password"
+            id="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <div className="login-btn">
+          <button className="login-btn">submit</button>
         </div>
-    );
+        {/* Display success message on successful login */}
+        {response?.status === 200 || response?.status === 201 ? (
+          <p className="success-message">Login successful!</p>
+        ) : null}
+        <div className="register-link">
+          <Link to="/register">Register here</Link>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default Login;

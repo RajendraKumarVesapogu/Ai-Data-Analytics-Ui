@@ -1,39 +1,38 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import constants from "../constants";
+import constants from "../constants";
 import "./register.css";
-
+import axios from "axios";
 const Register = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [email, setEmail] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
         console.log("called");
         console.log(username, password, email);
 
-        // fetch(constants.backend_url + constants.register_path, {
-        //     method: "POST",
-        //     headers: {
-        //         Accept: "application/json",
-        //         "Content-Type": "application/json",
-        //     },
-        //     body: JSON.stringify({
-        //         email: email,
-        //         username: username,
-        //         password: password,
-        //     }),
-        // }).then((response) => {
-        //     localStorage.setItem("login-response", response);
-        //     // if (true) {
-        //     if (response.ok) {
-        //         navigate("/home");
-        //     }
-        // });
-        localStorage.setItem("token", "the valuble token");
-        navigate("/");
+        await axios.post(
+            constants.backend_url + constants.register_path,
+            {
+              email,
+              username,
+              password,
+            },
+            {
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            }
+          ).then((response) => {
+            if (response.data && response.data.token) {
+                localStorage.setItem("token", response.data.token);
+                navigate("/home");
+            }
+        });
     };
     return (
         <div className="register-root">

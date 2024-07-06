@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./home.css";
-// import constants from "../constants";
+import constants from "../constants";
 
 const Home = () => {
     const [data, setData] = useState(null);
@@ -11,18 +11,18 @@ const Home = () => {
 
     const handleLinkSubmission = (event) => {
         event.preventDefault();
-        // fetch(constants.backend_url + constants.csv_upload_path, {
-        //     method: "POST",
-        //     body: {
-        //         csvlink: fileLink,
-        //     },
-        // }).then((res) => {
-        //     setData(res);
-        // });
+        fetch(constants.backend_url + constants.csv_upload_path, {
+            method: "POST",
+            body: {
+                csvlink: fileLink,
+            },
+        }).then((res) => {
+            console.log(res.body)
+            setData(res.body.columns);
+            localStorage.setItem("columns", JSON.stringify(res.body.columns));
+        });
         setData([
-            ["one", "two", "three"],
-            [1, 3, 4],
-            [2, 3, 5],
+            
         ]);
     };
 
