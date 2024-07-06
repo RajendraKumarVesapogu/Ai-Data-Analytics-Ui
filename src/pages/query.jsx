@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import "./query.css";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
 
 const Query = () => {
   const [columns, setColumns] = useState([]);
   const [selectedField, setSelectedField] = useState('');
-  const [operator, setOperator] = useState('=');
+  const [operator, setOperator] = useState('>');
   const [value, setValue] = useState('');
+  const [prompt, setPrompt] = useState('');
   const [results, setResults] = useState(null);
+  const [customResults, setCustomResults] = useState(null);
 
   useEffect(() => {
-    // Fetch columns from the GameData model
     const fetchColumns = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/columns/');
-        setColumns(response.data);
+        const response = localStorage.getItem("columns");
+        setColumns(JSON.parse(response));
       } catch (error) {
         console.error('Error fetching columns:', error);
       }
@@ -30,41 +27,38 @@ const Query = () => {
     try {
       const response = await axios.get(`http://localhost:8000/api/query/?field=${selectedField}&operator=${operator}&value=${value}`);
       setResults(response.data);
+      setCustomResults(null);
     } catch (error) {
       console.error('Error performing query:', error);
     }
   };
 
-  const renderAggregateChart = (data, title) => {
+  const handleCustomQuery = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/query/', { prompt });
+      setCustomResults(response.data);
+      setResults(null);
+    } catch (error) {
+      console.error('Error performing custom query:', error);
+    }
+  };
+
+  const renderAggregateResults = (data, title) => {
     if (!data) return null;
 
-    const chartData = {
-      labels: Object.keys(data),
-      datasets: [
-        {
-          data: Object.values(data),
-          backgroundColor: [
-            '#FF6384',
-            '#36A2EB',
-            '#FFCE56',
-            '#4BC0C0',
-            '#9966FF'
-          ],
-          hoverBackgroundColor: [
-            '#FF6384',
-            '#36A2EB',
-            '#FFCE56',
-            '#4BC0C0',
-            '#9966FF'
-          ]
-        }
-      ]
-    };
-
     return (
-      <div>
+      <div className="aggregate-results">
         <h3>{title}</h3>
-        <Pie data={chartData} />
+        <div className="circle-container">
+          {Object.entries(data).map(([key, value]) => (
+            <div key={key} className="circle">
+              <div className="circle-content">
+                <div className="circle-value">{value}</div>
+                <div className="circle-label">{key}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
@@ -73,7 +67,7 @@ const Query = () => {
     if (!data || data.length === 0) return null;
 
     return (
-      <div>
+      <div className="search-results">
         <h3>Search Results</h3>
         <table>
           <thead>
@@ -98,10 +92,10 @@ const Query = () => {
   };
 
   return (
-    <div>
+    <div className="query-container">
       <h1>Game Data Analytics</h1>
       
-      <div>
+      <div className="query-inputs">
         <select value={selectedField} onChange={(e) => setSelectedField(e.target.value)}>
           <option value="">Select a field</option>
           {columns.map((column) => (
@@ -127,11 +121,28 @@ const Query = () => {
         <button onClick={handleQuery}>Query</button>
       </div>
 
+      <div className="custom-query">
+        <input 
+          type="text" 
+          value={prompt} 
+          onChange={(e) => setPrompt(e.target.value)} 
+          placeholder="Enter custom query prompt"
+        />
+        <button onClick={handleCustomQuery}>Custom Query</button>
+      </div>
+
       {results && (
-        <div>
-          {renderAggregateChart(results.aggregate_results, "Aggregate Results")}
-          {renderAggregateChart(results.constrained_aggregate_results, "Constrained Aggregate Results")}
+        <div className="results">
+          {renderAggregateResults(results.aggregate_results, "Aggregate Results")}
+          {renderAggregateResults(results.constrained_aggregate_results, "Constrained Aggregate Results")}
           {renderSearchResults(results.search_results)}
+        </div>
+      )}
+
+      {customResults && (
+        <div className="custom-results">
+          <h3>Custom Query Results</h3>
+          {renderSearchResults(customResults.custom_prompt_results)}
         </div>
       )}
     </div>
